@@ -52,6 +52,7 @@
 inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
 
     using SemanticAnalyzer::iterator;
+    using SemanticAnalyzer::tokenVectorEnd;
 
     ++iterator;
 
