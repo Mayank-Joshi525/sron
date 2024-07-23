@@ -64,7 +64,7 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
    // 
    //
    //
-   // Implemention for unary operator
+   // Implemention for unary operator not done yet
    //
    //
 
