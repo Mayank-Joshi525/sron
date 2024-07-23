@@ -26,12 +26,12 @@
 
     * If TYPE_IDENTIFIER is found, then call SemanticAnalyzer::FOUND_TYPE_IDENTIFIER()
 
-    * If TYPE_LIST_OPEN is found, then call SemanticAnalyzer::FOUND_LIST_OPEN()
+    * If TYPE_LIST_OPEN is found, then call SemanticAnalyzer::FOUND_TYPE_LIST_OPEN()
 
     * The above function will move the SemanticAnalyzer::iterator to their respective end token.
 
     For example: 
-                    1- SemanticAnalyzer::FOUND_LIST_OPEN() function moves the iterator to ']' token
+                    1- SemanticAnalyzer::FOUND_TYPE_LIST_OPEN() function moves the iterator to ']' token
                     where list ends.
                     2- Same with SemanticAnalyzer::FOUND_TYPE_FUNCTION_CALL(), it moves the iterator
                     to ')' where arguments passed to the function ends.
@@ -45,16 +45,99 @@
    * ~ 2 + println() ~             [Valid]
    * ~ 2 2 + ~                     [Invalid]
    * ~ + + 22 println()~           [Invalid]
-   * ~ 97 + println( 2 + 2) ~      [Invalid]
+   * ~ 97 + println( 2 + 2 ) ~      [Invalid]
   
 */
 
 inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
+   using SemanticAnalyzer::iterator;
+   using SemanticAnalyzer::tokenVectorEnd;
+   
+   // inside math block any operation need 3 values: 
+   // Two OPERAND and One OPERATOR between them. (eg:  ~ a + b ~) 
+   // Their can be opening bracket after OPERATOR and
+   // Their can be closing bracket after OPERAND.
 
-    using SemanticAnalyzer::iterator;
-    using SemanticAnalyzer::tokenVectorEnd;
+   //eg ((((a + b ) + c) + d) + e)   or  ~ (()) ~
+   while(++iterator->_type ==  TYPE_OPENING_BRACKETS || iterator->_type == TYPE_CLOSING_BRACKETS);
 
-    ++iterator;
+   // 
+   //
+   //
+   // Implemention for unary operator
+   //
+   //
 
-    // code here
+
+   //first value always operand  but not for unary operator (eg: ~ -a ~)
+   switch (iterator->_type){
+      case TYPE_INT:
+      case TYPE_VOID:
+      case TYPE_DOUBLE:
+      case TYPE_CHAR:
+      case TYPE_STRING:
+      case TYPE_BOOL:
+         break;
+
+      case TYPE_IDENTIFIER:
+         SemanticAnalyzer::FOUND_TYPE_IDENTIFIER();
+         break;
+
+      case TYPE_FUNCTION_CALL:                              // fuction_name(
+         SemanticAnalyzer::FOUND_TYPE_FUNCTION_CALL();      //iterator will reach to ')'
+         break;
+
+      case TYPE_LIST_OPEN:                           // '['
+         SemanticAnalyzer::FOUND_TYPE_LIST_OPEN();   // iterator will reach to ']'
+         break;
+
+      // case TYPE_OPERATOR:  will return false (eg: ~ + a ~ )
+      default:
+         return false;
+   }
+
+   // second value always operator and third value always operand
+   while(++iterator->_type != TYPE_MATH_BLOCK){
+
+      while(iterator->_type ==  TYPE_CLOSING_BRACKETS){   // ~ ( a ) ~   or   ~(a + (c + b))~
+         if(++iterator->_type == TYPE_MATH_BLOCK)  return true;
+      }
+
+      switch(iterator->_type){      //operator only
+         case TYPE_OPERATOR:
+            break;
+         default:
+            return false;
+      }
+      
+      //Closing brackets cannot be placed after an operator but opening brackets can.
+      while(++iterator->_type ==  TYPE_OPENING_BRACKETS);      
+
+      switch (iterator->_type){   //operand only
+         case TYPE_INT:
+         case TYPE_VOID:
+         case TYPE_DOUBLE:
+         case TYPE_CHAR:
+         case TYPE_STRING:
+         case TYPE_BOOL:
+            break;
+
+         case TYPE_IDENTIFIER:
+            SemanticAnalyzer::FOUND_TYPE_IDENTIFIER();
+            break;
+
+         case TYPE_FUNCTION_CALL:
+            SemanticAnalyzer::FOUND_TYPE_FUNCTION_CALL();
+            break;
+
+         case TYPE_LIST_OPEN:
+            SemanticAnalyzer::FOUND_TYPE_LIST_OPEN();
+            break;
+
+         default:    // case TYPE_OPERATOR:  will also return false (eg: ~ a + + ~ )
+            return false;
+      }
+   }
+   
+   return true;
 }
