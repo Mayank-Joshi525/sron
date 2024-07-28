@@ -58,11 +58,8 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
    // Their can be opening bracket after OPERATOR and
    // Their can be closing bracket after OPERAND.
 
-   while((++iterator)->_type == TYPE_OPERATOR);    // ~ - + - (...) ~
-   //eg ((((a + b ) + c) + d) + e)
-   while(iterator->_type ==  TYPE_OPENING_BRACKETS) ++iterator;
-
-   while(iterator->_type == TYPE_OPERATOR) ++iterator;    // ~ - + - ( - - a) ~
+      // ~ - + - ( ( ( - - ( - ... ~
+   while((++iterator)->_type == TYPE_OPERATOR || iterator->_type ==  TYPE_OPENING_BRACKETS);
 
 
    //first operant
@@ -100,13 +97,11 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
          if((++iterator)->_type == TYPE_MATH_BLOCK)  return true;
       }
 
-      //a + b  (atleast one operator should be between )
+      // a + b  (atleast one operator should be between )
       if(iterator->_type != TYPE_OPERATOR)   return false;
       
-      while((++iterator)->_type == TYPE_OPERATOR);       // a + - + - b
-      //Closing brackets cannot be placed after an operator but opening brackets can.
-      while((++iterator)->_type ==  TYPE_OPENING_BRACKETS);
-      while(iterator->_type == TYPE_OPERATOR) ++iterator;    // ~ ( a + (+ - + b) )~
+      // ~ ( a ) + - ( + ((( - + ... ~
+      while((++iterator)->_type == TYPE_OPERATOR || iterator->_type ==  TYPE_OPENING_BRACKETS);
 
       switch (iterator->_type){   //operand only
          case TYPE_INT:
@@ -129,10 +124,9 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
             SemanticAnalyzer::FOUND_TYPE_LIST_OPEN();
             break;
 
-         default:    // case TYPE_OPERATOR:  will also return false (eg: ~ a + + ~ )
+         default:
             return false;
       }
    }
-   
    return true;
 }
