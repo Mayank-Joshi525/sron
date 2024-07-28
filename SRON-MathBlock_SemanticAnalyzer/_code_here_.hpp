@@ -58,18 +58,14 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
    // Their can be opening bracket after OPERATOR and
    // Their can be closing bracket after OPERAND.
 
-   //eg ((((a + b ) + c) + d) + e)   or  ~ (()) ~
-   while(++iterator->_type ==  TYPE_OPENING_BRACKETS || iterator->_type == TYPE_CLOSING_BRACKETS);
+   while((++iterator)->_type == TYPE_OPERATOR);    // ~ - + - (...) ~
+   //eg ((((a + b ) + c) + d) + e)
+   while(iterator->_type ==  TYPE_OPENING_BRACKETS) ++iterator;
 
-   // 
-   //
-   //
-   // Implemention for unary operator not done yet
-   //
-   //
+   while(iterator->_type == TYPE_OPERATOR) ++iterator;    // ~ - + - ( - - a) ~
 
 
-   //first value always operand  but not for unary operator (eg: ~ -a ~)
+   //first operant
    switch (iterator->_type){
       case TYPE_INT:
       case TYPE_VOID:
@@ -91,27 +87,26 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
          SemanticAnalyzer::FOUND_TYPE_LIST_OPEN();   // iterator will reach to ']'
          break;
 
-      // case TYPE_OPERATOR:  will return false (eg: ~ + a ~ )
+      // case TYPE_OPERATOR:  will return false (eg: ~ + + ~ )
+      // case TYPE_CLOSING_BRACKETS eg: ~()~  or  ~((()))~
       default:
          return false;
    }
 
    // second value always operator and third value always operand
-   while(++iterator->_type != TYPE_MATH_BLOCK){
+   while((++iterator)->_type != TYPE_MATH_BLOCK){
 
       while(iterator->_type ==  TYPE_CLOSING_BRACKETS){   // ~ ( a ) ~   or   ~(a + (c + b))~
-         if(++iterator->_type == TYPE_MATH_BLOCK)  return true;
+         if((++iterator)->_type == TYPE_MATH_BLOCK)  return true;
       }
 
-      switch(iterator->_type){      //operator only
-         case TYPE_OPERATOR:
-            break;
-         default:
-            return false;
-      }
+      //a + b  (atleast one operator should be between )
+      if(iterator->_type != TYPE_OPERATOR)   return false;
       
+      while((++iterator)->_type == TYPE_OPERATOR);       // a + - + - b
       //Closing brackets cannot be placed after an operator but opening brackets can.
-      while(++iterator->_type ==  TYPE_OPENING_BRACKETS);      
+      while((++iterator)->_type ==  TYPE_OPENING_BRACKETS);
+      while(iterator->_type == TYPE_OPERATOR) ++iterator;    // ~ ( a + (+ - + b) )~
 
       switch (iterator->_type){   //operand only
          case TYPE_INT:
