@@ -62,7 +62,7 @@ inline static bool SemanticAnalyzer::FOUND_TYPE_MATH_BLOCK(){
    while((++iterator)->_type == TYPE_OPERATOR || iterator->_type ==  TYPE_OPENING_BRACKETS);
 
 
-   //first operant
+   //first operand
    switch (iterator->_type){
       case TYPE_INT:
       case TYPE_VOID:
